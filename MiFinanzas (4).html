@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mi Finanzas 🌿</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script>
+  function mfShowError(msg) {
+    var el = document.getElementById('root');
+    if (el) {
+      el.innerHTML = '<div style="max-width:520px;margin:80px auto;padding:24px 28px;background:#fff;border:1px solid #E7E1D2;border-radius:20px;font-family:sans-serif;color:#33402E;">' +
+        '<h2 style="margin-top:0;">🌿 Mi Finanzas no pudo cargar</h2>' +
+        '<p style="font-size:14px;line-height:1.5;">' + msg + '</p>' +
+        '<p style="font-size:13px;color:#8A9481;">Esta página necesita conexión a internet la primera vez que se abre, para descargar React, Babel y Chart.js. Si tu conexión está bien, intenta recargar la página (F5).</p>' +
+        '</div>';
+    }
+  }
+  window.addEventListener('error', function (e) {
+    if (e && e.message) mfShowError('Ocurrió un error al iniciar la aplicación: ' + e.message);
+  });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js" onerror="mfShowError('No se pudo cargar React desde internet. Revisa tu conexión.')"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js" onerror="mfShowError('No se pudo cargar ReactDOM desde internet. Revisa tu conexión.')"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js" onerror="mfShowError('No se pudo cargar Babel desde internet. Revisa tu conexión.')"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js" onerror="mfShowError('No se pudo cargar Chart.js desde internet. Revisa tu conexión.')"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" onerror="mfShowError('No se pudo cargar el módulo de Excel desde internet. Revisa tu conexión.')"></script>
+
+<style>
+  :root {
+    --sage: #8CA37E; --sage-light: #E4EEDB; --sage-dark: #3F5A3D;
+    --cream: #F7F3EA; --cream-deep: #EFE8D8; --white: #FFFFFF;
+    --pink: #F3C7CF; --pink-deep: #E9A5B2; --yellow: #FBE7A1; --yellow-deep: #F0CE68;
+    --blue: #C6DCF0; --blue-deep: #9DBFE0; --lilac: #DACDEF; --lilac-deep: #BBA3DD;
+    --text: #33402E; --text-muted: #8A9481; --border: #E7E1D2;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--cream); }
+  body { font-family: 'Poppins', 'Segoe UI', system-ui, sans-serif; color: var(--text); }
+  #root { min-height: 100vh; }
+
+  .mf-app { display: flex; min-height: 100vh; background: var(--cream); }
+  .mf-sidebar { width: 220px; background: var(--white); border-right: 1px solid var(--border); padding: 24px 16px; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; }
+  .mf-brand { padding: 4px 8px 20px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+  .mf-brand-logo { width: 38px; height: 38px; border-radius: 12px; background: var(--sage-light); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; font-size: 19px; }
+  .mf-brand-name { font-weight: 700; font-size: 15px; letter-spacing: 0.5px; color: var(--sage-dark); }
+  .mf-brand-tag { font-size: 11px; color: var(--text-muted); margin-top: 4px; line-height: 1.4; }
+  .mf-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  .mf-nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; border: none; background: transparent; color: var(--text-muted); font-size: 13px; font-weight: 500; text-align: left; cursor: pointer; transition: background .15s ease, color .15s ease; font-family: inherit; }
+  .mf-nav-item:hover { background: var(--cream); color: var(--text); }
+  .mf-nav-item.active { background: var(--sage-light); color: var(--sage-dark); font-weight: 600; }
+  .mf-sidebar-plant { text-align: center; font-size: 40px; padding-top: 12px; }
+
+  .mf-main { flex: 1; padding: 28px 32px 60px; max-width: calc(100vw - 220px); }
+  .mf-page { display: flex; flex-direction: column; gap: 20px; }
+
+  .mf-dash-header { display: grid; grid-template-columns: 1fr auto 1.4fr; gap: 20px; align-items: center; }
+  .mf-greeting { font-size: 26px; font-weight: 700; margin: 0; }
+  .mf-subgreeting { margin: 2px 0 0; color: var(--text-muted); font-size: 14px; }
+  .mf-motivation { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13.5px; font-weight: 500; padding: 16px 20px; }
+
+  .mf-card { background: var(--white); border-radius: 20px; padding: 18px 20px; border: 1px solid var(--border); box-shadow: 0 2px 10px rgba(63,90,61,0.04); }
+
+  .mf-summary-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+  .mf-summary-card { display: flex; flex-direction: column; gap: 4px; }
+  .mf-summary-card-pct { align-items: center; text-align: center; }
+  .mf-summary-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 6px; font-size: 19px; }
+  .mf-summary-label { font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.4px; }
+  .mf-summary-value { font-size: 21px; font-weight: 700; }
+  .mf-summary-sub { font-size: 11.5px; color: var(--text-muted); }
+
+  .mf-charts-grid { display: grid; grid-template-columns: 1.1fr 1.1fr 1fr; gap: 16px; }
+  .mf-chart-card { display: flex; flex-direction: column; gap: 10px; }
+  .mf-card-title { font-size: 12.5px; font-weight: 700; color: var(--text); letter-spacing: 0.3px; display: flex; align-items: center; gap: 6px; }
+  .mf-card-title-row { display: flex; justify-content: space-between; align-items: center; }
+
+  .mf-donut-row { display: flex; align-items: center; gap: 14px; }
+  .mf-donut-canvas-wrap { width: 150px; height: 190px; position: relative; flex-shrink: 0; }
+  .mf-donut-legend { flex: 1; display: flex; flex-direction: column; gap: 6px; font-size: 12px; min-width: 0; }
+  .mf-donut-total { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; line-height: 1.3; }
+  .mf-donut-total strong { font-size: 15px; color: var(--text); }
+  .mf-legend-row { display: flex; align-items: center; gap: 6px; }
+  .mf-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .mf-legend-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mf-legend-amt { color: var(--text-muted); white-space: nowrap; }
+  .mf-legend-pct { font-weight: 700; width: 32px; text-align: right; }
+
+  .mf-budget-row { display: flex; align-items: center; gap: 16px; }
+  .mf-budget-list { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+  .mf-budget-item { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+  .mf-budget-pct { align-self: flex-end; font-weight: 700; font-size: 11px; color: var(--text-muted); }
+
+  .mf-lower-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .mf-goals-mini { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
+  .mf-goal-mini { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; position: relative; }
+  .mf-goal-mini-top { display: flex; justify-content: space-between; gap: 8px; }
+  .mf-goal-mini-amt { color: var(--text-muted); font-size: 11.5px; white-space: nowrap; }
+  .mf-goal-mini-pct { align-self: flex-end; font-size: 11px; font-weight: 700; color: var(--sage-dark); }
+
+  .mf-mini-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+  .mf-mini-table th { text-align: left; color: var(--text-muted); font-weight: 600; padding: 4px 6px; border-bottom: 1px solid var(--border); }
+  .mf-mini-table td { padding: 6px 6px; border-bottom: 1px solid var(--cream); }
+
+  .mf-fixed-summary { display: flex; align-items: center; gap: 10px; font-size: 12px; margin-top: 10px; }
+  .mf-fixed-summary > span:first-child { white-space: nowrap; color: var(--text-muted); }
+  .mf-fixed-summary > span:last-child { font-weight: 700; }
+
+  .mf-ant-total { display: flex; justify-content: space-between; align-items: center; background: var(--pink); border-radius: 14px; padding: 10px 14px; font-size: 12.5px; font-weight: 700; margin-top: 10px; }
+  .mf-ant-total strong { font-size: 15px; }
+
+  .mf-tip { display: flex; align-items: center; gap: 10px; background: var(--cream-deep); font-size: 13px; font-weight: 500; }
+
+  .mf-empty { text-align: center; color: var(--text-muted); font-size: 13px; padding: 24px 0; }
+  .mf-empty.small { padding: 8px 0; }
+
+  .mf-monthpicker { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .mf-monthpicker-eyebrow { font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; }
+  .mf-monthpicker-btn { display: flex; align-items: center; gap: 8px; background: var(--white); border: 1px solid var(--border); border-radius: 14px; padding: 10px 18px; font-size: 15px; font-weight: 700; cursor: pointer; color: var(--text); font-family: inherit; }
+  .mf-monthpicker-list { position: absolute; top: 100%; margin-top: 6px; background: var(--white); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); z-index: 20; overflow: hidden; min-width: 160px; }
+  .mf-monthpicker-opt { padding: 10px 16px; font-size: 13px; cursor: pointer; }
+  .mf-monthpicker-opt:hover { background: var(--cream); }
+  .mf-monthpicker-opt.active { background: var(--sage-light); color: var(--sage-dark); font-weight: 700; }
+  .mf-monthpicker-add { border-top: 1px solid var(--border); font-weight: 700; color: var(--sage-dark); }
+
+  .mf-page-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+  .mf-page-head h1 { font-size: 21px; margin: 0; }
+  .mf-page-head-actions { display: flex; align-items: center; gap: 14px; }
+
+  .mf-btn-primary { display: flex; align-items: center; gap: 6px; background: var(--sage-dark); color: white; border: none; border-radius: 14px; padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: inherit; }
+  .mf-btn-primary:hover { background: #34492f; }
+  .mf-btn-block { width: 100%; justify-content: center; margin-top: 6px; }
+
+  .mf-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .mf-table th { text-align: left; color: var(--text-muted); font-weight: 600; padding: 10px; border-bottom: 1px solid var(--border); font-size: 11.5px; letter-spacing: 0.3px; }
+  .mf-table td { padding: 10px; border-bottom: 1px solid var(--cream); }
+  .mf-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 700; }
+  .mf-badge.in { background: var(--sage-light); color: var(--sage-dark); }
+  .mf-badge.out { background: var(--pink); color: #9C4A5C; }
+  .mf-pos { color: var(--sage-dark); font-weight: 700; }
+  .mf-neg { color: #C4677C; font-weight: 700; }
+  .mf-icon-btn { background: transparent; border: none; cursor: pointer; color: var(--text-muted); padding: 4px; border-radius: 8px; display: inline-flex; font-size: 14px; }
+  .mf-icon-btn:hover { background: var(--cream); color: var(--text); }
+  .mf-checkbox { background: transparent; border: none; font-size: 16px; cursor: pointer; }
+
+  .mf-goals-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .mf-goal-card { display: flex; flex-direction: column; gap: 10px; }
+  .mf-goal-card-head { display: flex; justify-content: space-between; align-items: center; }
+  .mf-goal-card-title { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; }
+  .mf-goal-icon { font-size: 20px; }
+  .mf-goal-card-actions { display: flex; gap: 2px; }
+  .mf-goal-amounts { font-size: 18px; font-weight: 700; }
+  .mf-goal-amounts span { font-size: 13px; font-weight: 500; color: var(--text-muted); }
+  .mf-goal-footer { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-muted); }
+
+  .mf-config-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .mf-chip-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+  .mf-chip { display: flex; align-items: center; gap: 6px; background: var(--sage-light); color: var(--sage-dark); padding: 6px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+  .mf-chip .mf-chip-x { cursor: pointer; font-weight: 700; }
+  .mf-add-row { display: flex; gap: 8px; }
+  .mf-add-row input { flex: 1; }
+  .mf-config-note { font-size: 13px; color: var(--text-muted); line-height: 1.5; margin: 8px 0 0; }
+
+  .mf-field { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--text-muted); margin-bottom: 12px; }
+  .mf-field input, .mf-field select { border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; font-size: 13.5px; font-family: inherit; color: var(--text); background: var(--cream); }
+  .mf-field input:focus, .mf-field select:focus { outline: 2px solid var(--sage); }
+
+  .mf-modal-overlay { position: fixed; inset: 0; background: rgba(51,64,46,0.35); display: flex; align-items: center; justify-content: center; z-index: 100; }
+  .mf-modal { background: white; border-radius: 22px; padding: 24px 26px; width: 380px; max-width: 90vw; max-height: 86vh; overflow-y: auto; }
+  .mf-modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .mf-modal-head h3 { margin: 0; font-size: 16px; }
+
+  @media (max-width: 1100px) {
+    .mf-charts-grid, .mf-lower-grid, .mf-goals-grid, .mf-config-grid { grid-template-columns: 1fr; }
+    .mf-summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .mf-dash-header { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 720px) {
+    .mf-app { flex-direction: column; }
+    .mf-sidebar { width: 100%; height: auto; position: relative; flex-direction: row; overflow-x: auto; }
+    .mf-nav { flex-direction: row; }
+    .mf-main { max-width: 100vw; padding: 20px; }
+    .mf-summary-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div id="root"><div style="max-width:420px;margin:100px auto;text-align:center;font-family:sans-serif;color:#8A9481;">🌿 Cargando Mi Finanzas…</div></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useMemo, useEffect, useRef } = React;
+
+/* ---------------------------------------------------------------------- */
+/* DATA / CONSTANTS                                                        */
+/* ---------------------------------------------------------------------- */
+
+const PALETTE = {
+  sage: "#8CA37E", sageLight: "#E4EEDB", sageDark: "#3F5A3D",
+  cream: "#F7F3EA", creamDeep: "#EFE8D8", white: "#FFFFFF",
+  pink: "#F3C7CF", pinkDeep: "#E9A5B2", yellow: "#FBE7A1", yellowDeep: "#F0CE68",
+  blue: "#C6DCF0", blueDeep: "#9DBFE0", lilac: "#DACDEF", lilacDeep: "#BBA3DD",
+  text: "#33402E", textMuted: "#8A9481", border: "#E7E1D2",
+};
+
+const ICONS = {
+  Home: "🏠", Receipt: "🧾", ClipboardList: "📋", Target: "🎯", Coffee: "☕",
+  BarChart3: "📊", Settings: "⚙️", Plus: "➕", Calendar: "📅", ChevronDown: "▾",
+  Wallet: "💰", ShoppingBag: "💸", PiggyBank: "🐷", CreditCard: "💳",
+  Trash2: "🗑️", X: "✕", Check: "✔️", Leaf: "🌿", Sparkles: "✨",
+  TrendingUp: "📈", TrendingDown: "📉", Pencil: "✏️",
+};
+function Icon({ name, size = 16, color }) {
+  return <span style={{ fontSize: size, lineHeight: 1, color: color || "inherit" }}>{ICONS[name] || ""}</span>;
+}
+
+const CATEGORY_LIST = ["Comida", "Transporte", "Compras", "Salud", "Entretenimiento", "Servicios", "Hogar", "Mascotas", "Educación", "Ahorro"];
+const CATEGORY_ICON = { Comida: "🍔", Transporte: "🚗", Compras: "🛍️", Salud: "💊", Entretenimiento: "🎬", Servicios: "💡", Hogar: "🏠", Mascotas: "🐾", Educación: "📚", Ahorro: "🐷" };
+const CATEGORY_COLOR = { Comida: PALETTE.pinkDeep, Transporte: PALETTE.blueDeep, Compras: PALETTE.lilacDeep, Salud: PALETTE.yellowDeep, Entretenimiento: PALETTE.sage, Servicios: PALETTE.sageDark, Hogar: "#D9B48F", Mascotas: "#B8D8BA", Educación: "#9DBFE0", Ahorro: "#C9A8D8" };
+const CATEGORY_TYPE = { Comida: "necesidad", Transporte: "necesidad", Servicios: "necesidad", Hogar: "necesidad", Salud: "necesidad", Compras: "deseo", Entretenimiento: "deseo", Mascotas: "deseo", Educación: "deseo", Ahorro: "ahorro" };
+const PAYMENT_METHODS = ["Efectivo", "Débito", "Crédito", "Transferencia", "Pago móvil"];
+const SPANISH_MONTHS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+const MONTHS_SEED = [
+  { key: "2024-01", label: "Enero 2024" }, { key: "2024-02", label: "Febrero 2024" },
+  { key: "2024-03", label: "Marzo 2024" }, { key: "2024-04", label: "Abril 2024" },
+  { key: "2024-05", label: "Mayo 2024" },
+];
+
+function getNextMonthDefault(months) {
+  if (!months || !months.length) { const d = new Date(); return { monthIndex: d.getMonth(), year: d.getFullYear() }; }
+  const sorted = [...months].sort((a, b) => a.key.localeCompare(b.key));
+  const last = sorted[sorted.length - 1];
+  const [y, m] = last.key.split("-").map(Number);
+  let nm = m, ny = y;
+  if (nm === 12) { nm = 1; ny = y + 1; } else { nm = nm + 1; }
+  return { monthIndex: nm - 1, year: ny };
+}
+
+let _id = 1000;
+const nextId = () => (_id++).toString(36);
+
+function buildMonthTransactions(mesKey, ingresos, gastos, ahorros) {
+  const list = [];
+  const monthName = MONTHS_SEED.find(x => x.key === mesKey).label.split(" ")[0];
+  list.push({ id: nextId(), mes: mesKey, fecha: `01 ${monthName}`, tipo: "Ingreso", categoria: "Salario", descripcion: "Salario mensual", metodo: "Transferencia", monto: ingresos });
+  let day = 3, mi = 0;
+  Object.entries(gastos).forEach(([cat, monto]) => {
+    list.push({ id: nextId(), mes: mesKey, fecha: `${String(day).padStart(2, "0")} ${monthName}`, tipo: "Gasto", categoria: cat, descripcion: `Gasto en ${cat.toLowerCase()}`, metodo: PAYMENT_METHODS[mi % PAYMENT_METHODS.length], monto });
+    day += 2; mi++;
+  });
+  list.push({ id: nextId(), mes: mesKey, fecha: `28 ${monthName}`, tipo: "Gasto", categoria: "Ahorro", descripcion: "Aporte a ahorro", metodo: "Transferencia", monto: ahorros });
+  return list;
+}
+
+const MONTH_SEED = {
+  "2024-01": { ingresos: 6200, ahorros: 1500, gastos: { Comida: 980, Transporte: 580, Compras: 420, Salud: 150, Entretenimiento: 260, Servicios: 430, Hogar: 200 } },
+  "2024-02": { ingresos: 6300, ahorros: 1600, gastos: { Comida: 1010, Transporte: 600, Compras: 480, Salud: 170, Entretenimiento: 280, Servicios: 440, Hogar: 210 } },
+  "2024-03": { ingresos: 6400, ahorros: 1700, gastos: { Comida: 1050, Transporte: 610, Compras: 500, Salud: 180, Entretenimiento: 290, Servicios: 445, Hogar: 215 } },
+  "2024-04": { ingresos: 6450, ahorros: 1780, gastos: { Comida: 1080, Transporte: 615, Compras: 520, Salud: 190, Entretenimiento: 300, Servicios: 448, Hogar: 218 } },
+  "2024-05": { ingresos: 6500, ahorros: 1850, gastos: { Comida: 1120, Transporte: 620, Compras: 540.75, Salud: 200, Entretenimiento: 315, Servicios: 450 } },
+};
+
+function seedTransactions() {
+  let all = [];
+  Object.entries(MONTH_SEED).forEach(([mesKey, v]) => { all = all.concat(buildMonthTransactions(mesKey, v.ingresos, v.gastos, v.ahorros)); });
+  return all;
+}
+function seedFixedExpenses() {
+  return [
+    { id: nextId(), nombre: "Internet", dia: 5, monto: 250, categoria: "Servicios", pagado: { "2024-05": true, "2024-04": true, "2024-03": true, "2024-02": true, "2024-01": true } },
+    { id: nextId(), nombre: "Spotify", dia: 12, monto: 29, categoria: "Entretenimiento", pagado: { "2024-05": true, "2024-04": true, "2024-03": true, "2024-02": true, "2024-01": true } },
+    { id: nextId(), nombre: "Teléfono", dia: 15, monto: 100, categoria: "Servicios", pagado: { "2024-05": true, "2024-04": true, "2024-03": true, "2024-02": true, "2024-01": true } },
+    { id: nextId(), nombre: "Electricidad", dia: 20, monto: 300, categoria: "Servicios", pagado: { "2024-05": false, "2024-04": true, "2024-03": true, "2024-02": true, "2024-01": true } },
+    { id: nextId(), nombre: "Seguro médico", dia: 25, monto: 200, categoria: "Salud", pagado: { "2024-05": false, "2024-04": true, "2024-03": false, "2024-02": true, "2024-01": true } },
+  ];
+}
+function seedAntExpenses() {
+  return [
+    { id: nextId(), mes: "2024-05", fecha: "02 Mayo", descripcion: "Café", categoria: "Comida", monto: 15 },
+    { id: nextId(), mes: "2024-05", fecha: "03 Mayo", descripcion: "Dulces", categoria: "Comida", monto: 8 },
+    { id: nextId(), mes: "2024-05", fecha: "06 Mayo", descripcion: "Galletas", categoria: "Comida", monto: 6.5 },
+    { id: nextId(), mes: "2024-05", fecha: "08 Mayo", descripcion: "Snacks", categoria: "Comida", monto: 10 },
+    { id: nextId(), mes: "2024-05", fecha: "09 Mayo", descripcion: "Refresco", categoria: "Comida", monto: 12 },
+    { id: nextId(), mes: "2024-04", fecha: "04 Abril", descripcion: "Café", categoria: "Comida", monto: 15 },
+    { id: nextId(), mes: "2024-04", fecha: "11 Abril", descripcion: "Chicle", categoria: "Comida", monto: 5 },
+  ];
+}
+function seedGoals() {
+  return [
+    { id: nextId(), nombre: "Viaje a la playa", icono: "🏝", objetivo: 2000, ahorrado: 1200, fecha: "31 Ago 2024" },
+    { id: nextId(), nombre: "Fondo de emergencia", icono: "🐷", objetivo: 2500, ahorrado: 1000, fecha: "" },
+    { id: nextId(), nombre: "Nuevo laptop", icono: "💻", objetivo: 4000, ahorrado: 650, fecha: "31 Dic 2024" },
+  ];
+}
+
+/* ---------------------------------------------------------------------- */
+/* HELPERS                                                                  */
+/* ---------------------------------------------------------------------- */
+
+const fmt = (n, moneda = "Q") => `${moneda}${(Math.round(n * 100) / 100).toLocaleString("es-GT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+function monthSummary(transactions, mesKey) {
+  const rows = transactions.filter(t => t.mes === mesKey);
+  const ingresos = rows.filter(t => t.tipo === "Ingreso").reduce((s, t) => s + t.monto, 0);
+  const gastosTotales = rows.filter(t => t.tipo === "Gasto" && t.categoria !== "Ahorro").reduce((s, t) => s + t.monto, 0);
+  const ahorros = rows.filter(t => t.tipo === "Gasto" && t.categoria === "Ahorro").reduce((s, t) => s + t.monto, 0);
+  const disponible = ingresos - gastosTotales - ahorros;
+  const pctAhorro = ingresos > 0 ? (ahorros / ingresos) * 100 : 0;
+  const porCategoria = {};
+  rows.filter(t => t.tipo === "Gasto").forEach(t => { porCategoria[t.categoria] = (porCategoria[t.categoria] || 0) + t.monto; });
+  return { ingresos, gastosTotales, ahorros, disponible, pctAhorro, porCategoria };
+}
+
+/* ---------------------------------------------------------------------- */
+/* CHART.JS WRAPPER                                                         */
+/* ---------------------------------------------------------------------- */
+
+function ChartCanvas({ config, height = 200 }) {
+  const canvasRef = useRef(null);
+  const chartRef = useRef(null);
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    const ctx = canvasRef.current.getContext("2d");
+    chartRef.current = new Chart(ctx, config);
+    return () => chartRef.current && chartRef.current.destroy();
+  }, [JSON.stringify(config)]);
+  return <div style={{ position: "relative", width: "100%", height }}><canvas ref={canvasRef}></canvas></div>;
+}
+
+/* ---------------------------------------------------------------------- */
+/* SMALL UI PRIMITIVES                                                      */
+/* ---------------------------------------------------------------------- */
+
+function Card({ children, style, className }) { return <div className={`mf-card ${className || ""}`} style={style}>{children}</div>; }
+
+function ProgressBar({ pct, color = PALETTE.sage, bg = PALETTE.sageLight, height = 10 }) {
+  return (
+    <div style={{ background: bg, borderRadius: 99, height, width: "100%", overflow: "hidden" }}>
+      <div style={{ background: color, height: "100%", width: `${Math.min(100, Math.max(0, pct))}%`, borderRadius: 99, transition: "width .5s ease" }} />
+    </div>
+  );
+}
+
+function DonutMini({ pct, color, size = 88, label }) {
+  const r = 34, c = 2 * Math.PI * r;
+  return (
+    <svg width={size} height={size} viewBox="0 0 90 90">
+      <circle cx="45" cy="45" r={r} fill="none" stroke={PALETTE.sageLight} strokeWidth="10" />
+      <circle cx="45" cy="45" r={r} fill="none" stroke={color} strokeWidth="10" strokeDasharray={c} strokeDashoffset={c - (pct / 100) * c} strokeLinecap="round" transform="rotate(-90 45 45)" />
+      <text x="45" y="42" textAnchor="middle" fontSize="17" fontWeight="700" fill={PALETTE.text}>{Math.round(pct)}%</text>
+      {label && <text x="45" y="58" textAnchor="middle" fontSize="7" fill={PALETTE.textMuted}>{label}</text>}
+    </svg>
+  );
+}
+
+function Modal({ title, onClose, children }) {
+  return (
+    <div className="mf-modal-overlay" onClick={onClose}>
+      <div className="mf-modal" onClick={e => e.stopPropagation()}>
+        <div className="mf-modal-head"><h3>{title}</h3><button className="mf-icon-btn" onClick={onClose}><Icon name="X" size={18} /></button></div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children }) { return <label className="mf-field"><span>{label}</span>{children}</label>; }
+function EmptyState({ text, small }) { return <div className={`mf-empty ${small ? "small" : ""}`}>🌱 {text}</div>; }
+
+/* ---------------------------------------------------------------------- */
+/* NAVIGATION                                                               */
+/* ---------------------------------------------------------------------- */
+
+const NAV = [
+  { key: "dashboard", label: "Dashboard", icon: "Home" },
+  { key: "registro", label: "Registro de gastos", icon: "Receipt" },
+  { key: "fijos", label: "Gastos fijos", icon: "ClipboardList" },
+  { key: "metas", label: "Metas de ahorro", icon: "Target" },
+  { key: "hormiga", label: "Gastos hormiga", icon: "Coffee" },
+  { key: "anual", label: "Resumen anual", icon: "BarChart3" },
+  { key: "config", label: "Configuración", icon: "Settings" },
+];
+
+function Sidebar({ page, setPage }) {
+  return (
+    <aside className="mf-sidebar">
+      <div className="mf-brand">
+        <div className="mf-brand-logo">🌿</div>
+        <div className="mf-brand-name">MI FINANZAS</div>
+        <div className="mf-brand-tag">Pequeños pasos,<br />grandes cambios 💚</div>
+      </div>
+      <nav className="mf-nav">
+        {NAV.map(item => (
+          <button key={item.key} className={`mf-nav-item ${page === item.key ? "active" : ""}`} onClick={() => setPage(item.key)}>
+            <Icon name={item.icon} size={18} /><span>{item.label}</span>
+          </button>
+        ))}
+      </nav>
+      <div className="mf-sidebar-plant">🌱</div>
+    </aside>
+  );
+}
+
+function MonthPicker({ mesKey, setMesKey, months, setMonths, setTransactions, moneda }) {
+  const [open, setOpen] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
+  const [newMonthIdx, setNewMonthIdx] = useState(0);
+  const [newYear, setNewYear] = useState(2024);
+  const [newIngreso, setNewIngreso] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const label = months.find(m => m.key === mesKey)?.label || "Selecciona un mes";
+
+  const openAdd = () => {
+    const n = getNextMonthDefault(months);
+    setNewMonthIdx(n.monthIndex); setNewYear(n.year); setNewIngreso(""); setErrorMsg("");
+    setShowAdd(true); setOpen(false);
+  };
+
+  const submitAdd = () => {
+    const key = `${newYear}-${String(newMonthIdx + 1).padStart(2, "0")}`;
+    if (months.some(m => m.key === key)) { setErrorMsg("Ese mes ya existe en la lista."); return; }
+    const newLabel = `${SPANISH_MONTHS[newMonthIdx]} ${newYear}`;
+    setMonths(prev => [...prev, { key, label: newLabel }].sort((a, b) => a.key.localeCompare(b.key)));
+    if (newIngreso && parseFloat(newIngreso) > 0 && setTransactions) {
+      setTransactions(prev => [...prev, { id: nextId(), mes: key, fecha: `01 ${SPANISH_MONTHS[newMonthIdx]}`, tipo: "Ingreso", categoria: "Salario", descripcion: "Salario mensual", metodo: "Transferencia", monto: parseFloat(newIngreso) }]);
+    }
+    setMesKey(key);
+    setShowAdd(false);
+  };
+
+  return (
+    <div className="mf-monthpicker">
+      <div className="mf-monthpicker-eyebrow">MES SELECCIONADO</div>
+      <button className="mf-monthpicker-btn" onClick={() => setOpen(o => !o)}>
+        <Icon name="Calendar" size={16} /> <span>{label}</span> <Icon name="ChevronDown" size={16} />
+      </button>
+      {open && (
+        <div className="mf-monthpicker-list">
+          {months.map(m => (
+            <div key={m.key} className={`mf-monthpicker-opt ${m.key === mesKey ? "active" : ""}`} onClick={() => { setMesKey(m.key); setOpen(false); }}>{m.label}</div>
+          ))}
+          <div className="mf-monthpicker-opt mf-monthpicker-add" onClick={openAdd}>➕ Agregar mes</div>
+        </div>
+      )}
+      {showAdd && (
+        <Modal title="Agregar nuevo mes" onClose={() => setShowAdd(false)}>
+          <Field label="Mes">
+            <select value={newMonthIdx} onChange={e => setNewMonthIdx(parseInt(e.target.value))}>
+              {SPANISH_MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
+            </select>
+          </Field>
+          <Field label="Año"><input type="number" value={newYear} onChange={e => setNewYear(parseInt(e.target.value) || newYear)} /></Field>
+          <Field label={`Ingreso mensual (opcional, ${moneda})`}><input type="number" value={newIngreso} onChange={e => setNewIngreso(e.target.value)} placeholder="Ej. 6500" /></Field>
+          {errorMsg && <p style={{ color: "#C4677C", fontSize: 12.5, marginTop: -6 }}>{errorMsg}</p>}
+          <button className="mf-btn-primary mf-btn-block" onClick={submitAdd}><Icon name="Check" size={16} /> Agregar mes</button>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------- */
+/* DASHBOARD PAGE                                                           */
+/* ---------------------------------------------------------------------- */
+
+function Dashboard({ transactions, fixedExpenses, antExpenses, goals, mesKey, setMesKey, moneda, presupuesto, months, setMonths, setTransactions }) {
+  const summary = useMemo(() => monthSummary(transactions, mesKey), [transactions, mesKey]);
+  const pieData = Object.entries(summary.porCategoria).filter(([, v]) => v > 0).map(([cat, v]) => ({ name: cat, value: Math.round(v * 100) / 100 }));
+  const barData = months.map(m => { const s = monthSummary(transactions, m.key); return { mes: m.label.split(" ")[0].slice(0, 3), Ingresos: Math.round(s.ingresos), Gastos: Math.round(s.gastosTotales) }; });
+
+  const necesidades = Object.entries(summary.porCategoria).filter(([c]) => CATEGORY_TYPE[c] === "necesidad").reduce((s, [, v]) => s + v, 0);
+  const deseos = Object.entries(summary.porCategoria).filter(([c]) => CATEGORY_TYPE[c] === "deseo").reduce((s, [, v]) => s + v, 0);
+  const ahorroSlice = summary.ahorros;
+  const totalAsignado = necesidades + deseos + ahorroSlice || 1;
+  const pctNecesidades = (necesidades / totalAsignado) * 100;
+  const pctDeseos = (deseos / totalAsignado) * 100;
+  const pctAhorroSlice = (ahorroSlice / totalAsignado) * 100;
+  const pctUtilizado = presupuesto > 0 ? ((summary.gastosTotales + summary.ahorros) / presupuesto) * 100 : 0;
+
+  const fixedForMonth = fixedExpenses;
+  const pagados = fixedForMonth.filter(f => f.pagado[mesKey]).length;
+  const pctFijosPagados = fixedForMonth.length ? (pagados / fixedForMonth.length) * 100 : 0;
+  const antForMonth = antExpenses.filter(a => a.mes === mesKey);
+  const totalAnt = antForMonth.reduce((s, a) => s + a.monto, 0);
+
+  const donutConfig = {
+    type: "doughnut",
+    data: { labels: pieData.map(d => d.name), datasets: [{ data: pieData.map(d => d.value), backgroundColor: pieData.map(d => CATEGORY_COLOR[d.name] || PALETTE.sage), borderWidth: 0 }] },
+    options: { cutout: "62%", plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${ctx.label}: ${fmt(ctx.parsed, moneda)}` } } } },
+  };
+  const barConfig = {
+    type: "bar",
+    data: { labels: barData.map(d => d.mes), datasets: [
+      { label: "Ingresos", data: barData.map(d => d.Ingresos), backgroundColor: PALETTE.sage, borderRadius: 6 },
+      { label: "Gastos", data: barData.map(d => d.Gastos), backgroundColor: PALETTE.pinkDeep, borderRadius: 6 },
+    ] },
+    options: { plugins: { legend: { position: "bottom", labels: { boxWidth: 10, font: { size: 11 } } }, tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${fmt(ctx.parsed.y, moneda)}` } } },
+      scales: { x: { grid: { display: false } }, y: { grid: { color: PALETTE.border }, ticks: { callback: v => `${moneda}${v / 1000}k` } } } },
+  };
+
+  return (
+    <div className="mf-page">
+      <div className="mf-dash-header">
+        <div><h1 className="mf-greeting">¡Hola! 👋</h1><p className="mf-subgreeting">Tú puedes con tus metas ✨</p></div>
+        <MonthPicker mesKey={mesKey} setMesKey={setMesKey} months={months} setMonths={setMonths} setTransactions={setTransactions} moneda={moneda} />
+        <Card className="mf-motivation" style={{ background: PALETTE.creamDeep }}>
+          <span>"No se trata de tener mucho dinero, sino de saber administrarlo bien. 💚"</span>
+          <Icon name="Leaf" size={26} color={PALETTE.sage} />
+        </Card>
+      </div>
+
+      <div className="mf-summary-grid">
+        <Card className="mf-summary-card">
+          <div className="mf-summary-icon" style={{ background: PALETTE.sageLight }}><Icon name="Wallet" size={20} color={PALETTE.sageDark} /></div>
+          <div className="mf-summary-label">INGRESOS</div>
+          <div className="mf-summary-value" style={{ color: PALETTE.sageDark }}>{fmt(summary.ingresos, moneda)}</div>
+          <div className="mf-summary-sub">Total del mes</div>
+        </Card>
+        <Card className="mf-summary-card">
+          <div className="mf-summary-icon" style={{ background: PALETTE.pink }}><Icon name="ShoppingBag" size={20} color="#9C4A5C" /></div>
+          <div className="mf-summary-label">GASTOS TOTALES</div>
+          <div className="mf-summary-value" style={{ color: "#C4677C" }}>{fmt(summary.gastosTotales, moneda)}</div>
+          <div className="mf-summary-sub">Total del mes</div>
+        </Card>
+        <Card className="mf-summary-card">
+          <div className="mf-summary-icon" style={{ background: PALETTE.yellow }}><Icon name="PiggyBank" size={20} color="#9C7A1F" /></div>
+          <div className="mf-summary-label">AHORROS</div>
+          <div className="mf-summary-value" style={{ color: "#C99A2E" }}>{fmt(summary.ahorros, moneda)}</div>
+          <div className="mf-summary-sub">Total del mes</div>
+        </Card>
+        <Card className="mf-summary-card">
+          <div className="mf-summary-icon" style={{ background: PALETTE.blue }}><Icon name="CreditCard" size={20} color="#3F6591" /></div>
+          <div className="mf-summary-label">DISPONIBLE</div>
+          <div className="mf-summary-value" style={{ color: "#5185C2" }}>{fmt(summary.disponible, moneda)}</div>
+          <div className="mf-summary-sub">Te queda</div>
+        </Card>
+        <Card className="mf-summary-card mf-summary-card-pct">
+          <DonutMini pct={summary.pctAhorro} color={PALETTE.lilacDeep} size={72} />
+          <div className="mf-summary-label" style={{ marginTop: 4 }}>% DE AHORRO</div>
+          <div className="mf-summary-sub">{summary.pctAhorro >= 20 ? "¡Buen trabajo! 💚" : "Sigue así 🌱"}</div>
+        </Card>
+      </div>
+
+      <div className="mf-charts-grid">
+        <Card className="mf-chart-card">
+          <div className="mf-card-title">DISTRIBUCIÓN DE GASTOS</div>
+          {pieData.length === 0 ? <EmptyState text="Aún no hay gastos este mes." /> : (
+            <div className="mf-donut-row">
+              <div className="mf-donut-canvas-wrap"><ChartCanvas config={donutConfig} height={190} /></div>
+              <div className="mf-donut-legend">
+                <div className="mf-donut-total">Total<br /><strong>{fmt(summary.gastosTotales, moneda)}</strong></div>
+                {[...pieData].sort((a, b) => b.value - a.value).map(d => (
+                  <div key={d.name} className="mf-legend-row">
+                    <span className="mf-legend-dot" style={{ background: CATEGORY_COLOR[d.name] }} />
+                    <span className="mf-legend-name">{CATEGORY_ICON[d.name]} {d.name}</span>
+                    <span className="mf-legend-amt">{fmt(d.value, moneda)}</span>
+                    <span className="mf-legend-pct">{Math.round((d.value / summary.gastosTotales) * 100)}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </Card>
+
+        <Card className="mf-chart-card">
+          <div className="mf-card-title">INGRESOS VS GASTOS <Icon name="Sparkles" size={14} color={PALETTE.yellowDeep} /></div>
+          <ChartCanvas config={barConfig} height={210} />
+        </Card>
+
+        <Card className="mf-chart-card">
+          <div className="mf-card-title">DISTRIBUCIÓN DEL PRESUPUESTO</div>
+          <div className="mf-budget-row">
+            <DonutMini pct={pctUtilizado} color={PALETTE.sageDark} size={110} label="utilizado" />
+            <div className="mf-budget-list">
+              <div className="mf-budget-item"><span>🏠 Necesidades</span><ProgressBar pct={pctNecesidades} color={PALETTE.sage} /><span className="mf-budget-pct">{Math.round(pctNecesidades)}%</span></div>
+              <div className="mf-budget-item"><span>💗 Deseos</span><ProgressBar pct={pctDeseos} color={PALETTE.yellowDeep} /><span className="mf-budget-pct">{Math.round(pctDeseos)}%</span></div>
+              <div className="mf-budget-item"><span>🐷 Ahorro</span><ProgressBar pct={pctAhorroSlice} color={PALETTE.lilacDeep} /><span className="mf-budget-pct">{Math.round(pctAhorroSlice)}%</span></div>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <div className="mf-lower-grid">
+        <Card>
+          <div className="mf-card-title-row"><div className="mf-card-title">🎯 METAS DE AHORRO</div></div>
+          <div className="mf-goals-mini">
+            {goals.map(g => {
+              const pct = (g.ahorrado / g.objetivo) * 100;
+              return (
+                <div key={g.id} className="mf-goal-mini">
+                  <div className="mf-goal-mini-top"><span>{g.icono} {g.nombre}</span><span className="mf-goal-mini-amt">{fmt(g.ahorrado, moneda)} / {fmt(g.objetivo, moneda)}</span></div>
+                  <ProgressBar pct={pct} color={PALETTE.sage} />
+                  <span className="mf-goal-mini-pct">{Math.round(pct)}%</span>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+
+        <Card>
+          <div className="mf-card-title">📋 GASTOS FIJOS</div>
+          <table className="mf-mini-table">
+            <thead><tr><th>Gasto</th><th>Fecha</th><th>Monto</th><th>Estado</th></tr></thead>
+            <tbody>{fixedForMonth.map(f => (
+              <tr key={f.id}><td>{f.nombre}</td><td>{String(f.dia).padStart(2, "0")} {months.find(m => m.key === mesKey).label.split(" ")[0]}</td><td>{fmt(f.monto, moneda)}</td><td>{f.pagado[mesKey] ? "☑" : "☐"}</td></tr>
+            ))}</tbody>
+          </table>
+          <div className="mf-fixed-summary"><span>Pagados: {pagados} de {fixedForMonth.length}</span><ProgressBar pct={pctFijosPagados} /><span>{Math.round(pctFijosPagados)}%</span></div>
+        </Card>
+
+        <Card>
+          <div className="mf-card-title">☕ GASTOS HORMIGA DEL MES</div>
+          <table className="mf-mini-table">
+            <thead><tr><th>Fecha</th><th>Descripción</th><th>Monto</th></tr></thead>
+            <tbody>
+              {antForMonth.map(a => <tr key={a.id}><td>{a.fecha}</td><td>{a.descripcion}</td><td>{fmt(a.monto, moneda)}</td></tr>)}
+              {antForMonth.length === 0 && <tr><td colSpan={3}><EmptyState text="Sin registros este mes." small /></td></tr>}
+            </tbody>
+          </table>
+          <div className="mf-ant-total"><span>TOTAL GASTOS HORMIGA</span><strong>{fmt(totalAnt, moneda)}</strong></div>
+        </Card>
+      </div>
+
+      <Card className="mf-tip"><Icon name="Leaf" size={18} color={PALETTE.sageDark} /><span><strong>TIP DEL MES:</strong> Revisa tus gastos, ajusta y sigue avanzando hacia tus sueños 💚</span></Card>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------- */
+/* REGISTRO DE GASTOS                                                       */
+/* ---------------------------------------------------------------------- */
+
+function Registro({ transactions, setTransactions, mesKey, setMesKey, categorias, moneda, months, setMonths }) {
+  const [showForm, setShowForm] = useState(false);
+  const rows = transactions.filter(t => t.mes === mesKey).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  const empty = { tipo: "Gasto", categoria: categorias[0], descripcion: "", metodo: PAYMENT_METHODS[0], monto: "", fecha: "" };
+  const [form, setForm] = useState(empty);
+
+  const submit = () => {
+    if (!form.monto || !form.fecha) return;
+    setTransactions(prev => [...prev, { id: nextId(), mes: mesKey, fecha: form.fecha, tipo: form.tipo, categoria: form.categoria, descripcion: form.descripcion || form.categoria, metodo: form.metodo, monto: parseFloat(form.monto) }]);
+    setForm(empty); setShowForm(false);
+  };
+  const remove = id => setTransactions(prev => prev.filter(t => t.id !== id));
+
+  return (
+    <div className="mf-page">
+      <div className="mf-page-head">
+        <h1>🧾 Registro de gastos</h1>
+        <div className="mf-page-head-actions">
+          <MonthPicker mesKey={mesKey} setMesKey={setMesKey} months={months} setMonths={setMonths} setTransactions={setTransactions} moneda={moneda} />
+          <button className="mf-btn-primary" onClick={() => setShowForm(true)}><Icon name="Plus" size={16} /> Agregar movimiento</button>
+        </div>
+      </div>
+      <Card>
+        <table className="mf-table">
+          <thead><tr><th>Fecha</th><th>Tipo</th><th>Categoría</th><th>Descripción</th><th>Método</th><th>Monto</th><th></th></tr></thead>
+          <tbody>
+            {rows.map(r => (
+              <tr key={r.id}>
+                <td>{r.fecha}</td>
+                <td><span className={`mf-badge ${r.tipo === "Ingreso" ? "in" : "out"}`}><Icon name={r.tipo === "Ingreso" ? "TrendingUp" : "TrendingDown"} size={12} /> {r.tipo}</span></td>
+                <td>{CATEGORY_ICON[r.categoria] || "•"} {r.categoria}</td>
+                <td>{r.descripcion}</td>
+                <td>{r.metodo}</td>
+                <td className={r.tipo === "Ingreso" ? "mf-pos" : "mf-neg"}>{r.tipo === "Ingreso" ? "+" : "-"}{fmt(r.monto, moneda)}</td>
+                <td><button className="mf-icon-btn" onClick={() => remove(r.id)}><Icon name="Trash2" size={15} /></button></td>
+              </tr>
+            ))}
+            {rows.length === 0 && <tr><td colSpan={7}><EmptyState text="No hay movimientos registrados este mes." /></td></tr>}
+          </tbody>
+        </table>
+      </Card>
+      {showForm && (
+        <Modal title="Agregar movimiento" onClose={() => setShowForm(false)}>
+          <Field label="Tipo"><select value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))}><option>Gasto</option><option>Ingreso</option></select></Field>
+          <Field label="Fecha (ej. 14 Mayo)"><input value={form.fecha} onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))} placeholder="14 Mayo" /></Field>
+          <Field label="Categoría"><select value={form.categoria} onChange={e => setForm(f => ({ ...f, categoria: e.target.value }))}>{form.tipo === "Ingreso" ? <option>Salario</option> : categorias.map(c => <option key={c}>{c}</option>)}</select></Field>
+          <Field label="Descripción"><input value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} placeholder="Opcional" /></Field>
+          <Field label="Método de pago"><select value={form.metodo} onChange={e => setForm(f => ({ ...f, metodo: e.target.value }))}>{PAYMENT_METHODS.map(m => <option key={m}>{m}</option>)}</select></Field>
+          <Field label={`Monto (${moneda})`}><input type="number" value={form.monto} onChange={e => setForm(f => ({ ...f, monto: e.target.value }))} placeholder="0.00" /></Field>
+          <button className="mf-btn-primary mf-btn-block" onClick={submit}><Icon name="Check" size={16} /> Guardar movimiento</button>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------- */
+/* GASTOS FIJOS                                                            */
+/* ---------------------------------------------------------------------- */
+
+function GastosFijos({ fixedExpenses, setFixedExpenses, mesKey, setMesKey, categorias, moneda, months, setMonths, setTransactions }) {
+  const [showForm, setShowForm] = useState(false);
+  const empty = { nombre: "", dia: "", monto: "", categoria: categorias[0] };
+  const [form, setForm] = useState(empty);
+  const toggle = id => setFixedExpenses(prev => prev.map(f => f.id === id ? { ...f, pagado: { ...f.pagado, [mesKey]: !f.pagado[mesKey] } } : f));
+  const remove = id => setFixedExpenses(prev => prev.filter(f => f.id !== id));
+  const submit = () => {
+    if (!form.nombre || !form.monto || !form.dia) return;
+    setFixedExpenses(prev => [...prev, { id: nextId(), nombre: form.nombre, dia: parseInt(form.dia), monto: parseFloat(form.monto), categoria: form.categoria, pagado: {} }]);
+    setForm(empty); setShowForm(false);
+  };
+  const pagados = fixedExpenses.filter(f => f.pagado[mesKey]).length;
+  const pct = fixedExpenses.length ? (pagados / fixedExpenses.length) * 100 : 0;
+  const monthLabel = months.find(m => m.key === mesKey).label.split(" ")[0];
+
+  return (
+    <div className="mf-page">
+      <div className="mf-page-head">
+        <h1>📋 Gastos fijos</h1>
+        <div className="mf-page-head-actions">
+          <MonthPicker mesKey={mesKey} setMesKey={setMesKey} months={months} setMonths={setMonths} setTransactions={setTransactions} moneda={moneda} />
+          <button className="mf-btn-primary" onClick={() => setShowForm(true)}><Icon name="Plus" size={16} /> Agregar gasto fijo</button>
+        </div>
+      </div>
+      <Card>
+        <table className="mf-table">
+          <thead><tr><th>Gasto</th><th>Categoría</th><th>Fecha de pago</th><th>Monto</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            {fixedExpenses.map(f => (
+              <tr key={f.id}>
+                <td>{f.nombre}</td><td>{CATEGORY_ICON[f.categoria]} {f.categoria}</td><td>{String(f.dia).padStart(2, "0")} {monthLabel}</td><td>{fmt(f.monto, moneda)}</td>
+                <td><button className="mf-checkbox" onClick={() => toggle(f.id)}>{f.pagado[mesKey] ? "☑" : "☐"}</button></td>
+                <td><button className="mf-icon-btn" onClick={() => remove(f.id)}><Icon name="Trash2" size={15} /></button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="mf-fixed-summary" style={{ marginTop: 16 }}><span>Pagados: {pagados} de {fixedExpenses.length}</span><ProgressBar pct={pct} /><span>{Math.round(pct)}%</span></div>
+      </Card>
+      {showForm && (
+        <Modal title="Agregar gasto fijo" onClose={() => setShowForm(false)}>
+          <Field label="Nombre"><input value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} placeholder="Ej. Netflix" /></Field>
+          <Field label="Día de pago (1-31)"><input type="number" value={form.dia} onChange={e => setForm(f => ({ ...f, dia: e.target.value }))} placeholder="15" /></Field>
+          <Field label="Categoría"><select value={form.categoria} onChange={e => setForm(f => ({ ...f, categoria: e.target.value }))}>{categorias.map(c => <option key={c}>{c}</option>)}</select></Field>
+          <Field label={`Monto (${moneda})`}><input type="number" value={form.monto} onChange={e => setForm(f => ({ ...f, monto: e.target.value }))} placeholder="0.00" /></Field>
+          <button className="mf-btn-primary mf-btn-block" onClick={submit}><Icon name="Check" size={16} /> Guardar</button>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------- */
+/* METAS DE AHORRO                                                          */
+/* ---------------------------------------------------------------------- */
+
+function Metas({ goals, setGoals, moneda }) {
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const empty = { nombre: "", icono: "🎯", objetivo: "", ahorrado: "", fecha: "" };
+  const [form, setForm] = useState(empty);
+  const openNew = () => { setForm(empty); setEditing(null); setShowForm(true); };
+  const openEdit = g => { setForm({ nombre: g.nombre, icono: g.icono, objetivo: g.objetivo, ahorrado: g.ahorrado, fecha: g.fecha }); setEditing(g.id); setShowForm(true); };
+  const remove = id => setGoals(prev => prev.filter(g => g.id !== id));
+  const submit = () => {
+    if (!form.nombre || !form.objetivo) return;
+    if (editing) setGoals(prev => prev.map(g => g.id === editing ? { ...g, ...form, objetivo: parseFloat(form.objetivo), ahorrado: parseFloat(form.ahorrado || 0) } : g));
+    else setGoals(prev => [...prev, { id: nextId(), nombre: form.nombre, icono: form.icono || "🎯", objetivo: parseFloat(form.objetivo), ahorrado: parseFloat(form.ahorrado || 0), fecha: form.fecha }]);
+    setShowForm(false);
+  };
+
+  return (
+    <div className="mf-page">
+      <div className="mf-page-head"><h1>🎯 Metas de ahorro</h1><button className="mf-btn-primary" onClick={openNew}><Icon name="Plus" size={16} /> Agregar meta</button></div>
+      <div className="mf-goals-grid">
+        {goals.map(g => {
+          const pct = (g.ahorrado / g.objetivo) * 100;
+          return (
+            <Card key={g.id} className="mf-goal-card">
+              <div className="mf-goal-card-head">
+                <div className="mf-goal-card-title"><span className="mf-goal-icon">{g.icono}</span>{g.nombre}</div>
+                <div className="mf-goal-card-actions">
+                  <button className="mf-icon-btn" onClick={() => openEdit(g)}><Icon name="Pencil" size={14} /></button>
+                  <button className="mf-icon-btn" onClick={() => remove(g.id)}><Icon name="Trash2" size={14} /></button>
+                </div>
+              </div>
+              <div className="mf-goal-amounts">{fmt(g.ahorrado, moneda)} <span>/ {fmt(g.objetivo, moneda)}</span></div>
+              <ProgressBar pct={pct} color={pct >= 100 ? PALETTE.sageDark : PALETTE.sage} height={12} />
+              <div className="mf-goal-footer"><span>{Math.round(pct)}% completado</span>{g.fecha && <span>📅 {g.fecha}</span>}</div>
+            </Card>
+          );
+        })}
+        {goals.length === 0 && <EmptyState text="Aún no tienes metas. ¡Agrega la primera!" />}
+      </div>
+      {showForm && (
+        <Modal title={editing ? "Editar meta" : "Agregar meta"} onClose={() => setShowForm(false)}>
+          <Field label="Nombre de la meta"><input value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} placeholder="Ej. Viaje a la playa" /></Field>
+          <Field label="Icono (emoji)"><input value={form.icono} onChange={e => setForm(f => ({ ...f, icono: e.target.value }))} placeholder="🏝" /></Field>
+          <Field label={`Monto objetivo (${moneda})`}><input type="number" value={form.objetivo} onChange={e => setForm(f => ({ ...f, objetivo: e.target.value }))} placeholder="2000" /></Field>
+          <Field label={`Monto ahorrado (${moneda})`}><input type="number" value={form.ahorrado} onChange={e => setForm(f => ({ ...f, ahorrado: e.target.value }))} placeholder="0" /></Field>
+          <Field label="Fecha límite (opcional)"><input value={form.fecha} onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))} placeholder="31 Dic 2024" /></Field>
+          <button className="mf-btn-primary mf-btn-block" onClick={submit}><Icon name="Check" size={16} /> Guardar meta</button>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------- */
+/* GASTOS HORMIGA                                                           */
+/* ---------------------------------------------------------------------- */
+
+function GastosHormiga({ antExpenses, setAntExpenses, mesKey, setMesKey, categorias, moneda, months, setMonths, setTransactions }) {
+  const [showForm, setShowForm] = useState(false);
+  const empty = { fecha: "", descripcion: "", categoria: categorias[0], monto: "" };
+  const [form, setForm] = useState(empty);
+  const rows = antExpenses.filter(a => a.mes === mesKey);
+  const total = rows.reduce((s, a) => s + a.monto, 0);
+  const remove = id => setAntExpenses(prev => prev.filter(a => a.id !== id));
+  const submit = () => {
+    if (!form.fecha || !form.monto) return;
+    setAntExpenses(prev => [...prev, { id: nextId(), mes: mesKey, fecha: form.fecha, descripcion: form.descripcion, categoria: form.categoria, monto: parseFloat(form.monto) }]);
+    setForm(empty); setShowForm(false);
+  };
+
+  return (
+    <div className="mf-page">
+      <div className="mf-page-head">
+        <h1>☕ Gastos hormiga</h1>
+        <div className="mf-page-head-actions">
+          <MonthPicker mesKey={mesKey} setMesKey={setMesKey} months={months} setMonths={setMonths} setTransactions={setTransactions} moneda={moneda} />
+          <button className="mf-btn-primary" onClick={() => setShowForm(true)}><Icon name="Plus" size={16} /> Registrar gasto</button>
+        </div>
+      </div>
+      <Card>
+        <table className="mf-table">
+          <thead><tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Monto</th><th></th></tr></thead>
+          <tbody>
+            {rows.map(a => (
+              <tr key={a.id}><td>{a.fecha}</td><td>{a.descripcion}</td><td>{CATEGORY_ICON[a.categoria]} {a.categoria}</td><td>{fmt(a.monto, moneda)}</td>
+                <td><button className="mf-icon-btn" onClick={() => remove(a.id)}><Icon name="Trash2" size={15} /></button></td></tr>
+            ))}
+            {rows.length === 0 && <tr><td colSpan={5}><EmptyState text="Sin gastos hormiga este mes." /></td></tr>}
+          </tbody>
+        </table>
+        <div className="mf-ant-total" style={{ marginTop: 16 }}><span>TOTAL GASTOS HORMIGA</span><strong>{fmt(total, moneda)}</strong></div>
+      </Card>
+      {showForm && (
+        <Modal title="Registrar gasto hormiga" onClose={() => setShowForm(false)}>
+          <Field label="Fecha (ej. 14 Mayo)"><input value={form.fecha} onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))} placeholder="14 Mayo" /></Field>
+          <Field label="Descripción"><input value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} placeholder="Café" /></Field>
+          <Field label="Categoría"><select value={form.categoria} onChange={e => setForm(f => ({ ...f, categoria: e.target.value }))}>{categorias.map(c => <option key={c}>{c}</option>)}</select></Field>
+          <Field label={`Monto (${moneda})`}><input type="number" value={form.monto} onChange={e => setForm(f => ({ ...f, monto: e.target.value }))} placeholder="15.00" /></Field>
+          <button className="mf-btn-primary mf-btn-block" onClick={submit}><Icon name="Check" size={16} /> Guardar</button>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------- */
+/* RESUMEN ANUAL                                                            */
+/* ---------------------------------------------------------------------- */
+
+function ResumenAnual({ transactions, moneda, months }) {
+  const data = months.map(m => { const s = monthSummary(transactions, m.key); return { mes: m.label.split(" ")[0].slice(0, 3), Ingresos: Math.round(s.ingresos), Gastos: Math.round(s.gastosTotales), Ahorros: Math.round(s.ahorros) }; });
+  const totalIngresos = data.reduce((s, d) => s + d.Ingresos, 0);
+  const totalGastos = data.reduce((s, d) => s + d.Gastos, 0);
+  const totalAhorros = data.reduce((s, d) => s + d.Ahorros, 0);
+  const pctAhorroProm = totalIngresos > 0 ? (totalAhorros / totalIngresos) * 100 : 0;
+
+  const lineConfig = {
+    type: "line",
+    data: { labels: data.map(d => d.mes), datasets: [
+      { label: "Ingresos", data: data.map(d => d.Ingresos), borderColor: PALETTE.sage, backgroundColor: PALETTE.sage, tension: 0.3, pointRadius: 4 },
+      { label: "Gastos", data: data.map(d => d.Gastos), borderColor: PALETTE.pinkDeep, backgroundColor: PALETTE.pinkDeep, tension: 0.3, pointRadius: 4 },
+      { label: "Ahorros", data: data.map(d => d.Ahorros), borderColor: PALETTE.lilacDeep, backgroundColor: PALETTE.lilacDeep, tension: 0.3, pointRadius: 4 },
+    ] },
+    options: { plugins: { legend: { position: "bottom", labels: { boxWidth: 10, font: { size: 11 } } }, tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${fmt(ctx.parsed.y, moneda)}` } } },
+      scales: { x: { grid: { display: false } }, y: { grid: { color: PALETTE.border }, ticks: { callback: v => `${moneda}${v / 1000}k` } } } },
+  };
+
+  return (
+    <div className="mf-page">
+      <div className="mf-page-head"><h1>📊 Resumen anual</h1></div>
+      <div className="mf-summary-grid" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
+        <Card className="mf-summary-card"><div className="mf-summary-label">INGRESOS ACUMULADOS</div><div className="mf-summary-value" style={{ color: PALETTE.sageDark }}>{fmt(totalIngresos, moneda)}</div></Card>
+        <Card className="mf-summary-card"><div className="mf-summary-label">GASTOS ACUMULADOS</div><div className="mf-summary-value" style={{ color: "#C4677C" }}>{fmt(totalGastos, moneda)}</div></Card>
+        <Card className="mf-summary-card"><div className="mf-summary-label">AHORRO ACUMULADO</div><div className="mf-summary-value" style={{ color: "#C99A2E" }}>{fmt(totalAhorros, moneda)}</div></Card>
+        <Card className="mf-summary-card"><div className="mf-summary-label">% AHORRO PROMEDIO</div><div className="mf-summary-value" style={{ color: PALETTE.lilacDeep }}>{Math.round(pctAhorroProm)}%</div></Card>
+      </div>
+      <Card className="mf-chart-card">
+        <div className="mf-card-title">EVOLUCIÓN MENSUAL</div>
+        <ChartCanvas config={lineConfig} height={280} />
+      </Card>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------- */
+/* CONFIGURACIÓN                                                            */
+/* ---------------------------------------------------------------------- */
+
+function Configuracion({ categorias, setCategorias, metodos, setMetodos, presupuesto, setPresupuesto, moneda, setMoneda, onExport, onReset }) {
+  const [newCat, setNewCat] = useState("");
+  const [newMet, setNewMet] = useState("");
+  const addCat = () => { if (newCat.trim()) { setCategorias(prev => [...prev, newCat.trim()]); setNewCat(""); } };
+  const removeCat = c => setCategorias(prev => prev.filter(x => x !== c));
+  const addMet = () => { if (newMet.trim()) { setMetodos(prev => [...prev, newMet.trim()]); setNewMet(""); } };
+  const removeMet = m => setMetodos(prev => prev.filter(x => x !== m));
+
+  return (
+    <div className="mf-page">
+      <div className="mf-page-head"><h1>⚙️ Configuración</h1></div>
+      <div className="mf-config-grid">
+        <Card>
+          <div className="mf-card-title">💾 Respaldo de tu historial</div>
+          <p className="mf-config-note">Tus datos se guardan automáticamente en este navegador. Descarga un respaldo en Excel cuando quieras para tenerlo a salvo o revisarlo en tu computadora.</p>
+          <button className="mf-btn-primary mf-btn-block" onClick={onExport} style={{ marginTop: 10 }}>⬇️ Descargar respaldo en Excel</button>
+          <button className="mf-btn-primary mf-btn-block" onClick={onReset} style={{ marginTop: 8, background: PALETTE.pinkDeep }}>🗑️ Restablecer datos de ejemplo</button>
+        </Card>
+        <Card>
+          <div className="mf-card-title">Categorías</div>
+          <div className="mf-chip-list">{categorias.map(c => <span key={c} className="mf-chip">{CATEGORY_ICON[c] || "•"} {c} <span className="mf-chip-x" onClick={() => removeCat(c)}>✕</span></span>)}</div>
+          <div className="mf-add-row"><input value={newCat} onChange={e => setNewCat(e.target.value)} placeholder="Nueva categoría" /><button className="mf-btn-primary" onClick={addCat}><Icon name="Plus" size={15} /></button></div>
+        </Card>
+        <Card>
+          <div className="mf-card-title">Métodos de pago</div>
+          <div className="mf-chip-list">{metodos.map(m => <span key={m} className="mf-chip">{m} <span className="mf-chip-x" onClick={() => removeMet(m)}>✕</span></span>)}</div>
+          <div className="mf-add-row"><input value={newMet} onChange={e => setNewMet(e.target.value)} placeholder="Nuevo método" /><button className="mf-btn-primary" onClick={addMet}><Icon name="Plus" size={15} /></button></div>
+        </Card>
+        <Card>
+          <div className="mf-card-title">Presupuesto mensual</div>
+          <Field label={`Monto (${moneda})`}><input type="number" value={presupuesto} onChange={e => setPresupuesto(parseFloat(e.target.value) || 0)} /></Field>
+        </Card>
+        <Card>
+          <div className="mf-card-title">Moneda</div>
+          <Field label="Símbolo de moneda"><select value={moneda} onChange={e => setMoneda(e.target.value)}><option value="Q">Q — Quetzal</option><option value="$">$ — Dólar</option><option value="€">€ — Euro</option></select></Field>
+        </Card>
+        <Card>
+          <div className="mf-card-title">Preferencias visuales</div>
+          <p className="mf-config-note">🌿 Mi Finanzas usa una paleta suave y natural pensada para que revisar tus números se sienta tranquilo, no estresante.</p>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------- */
+/* APP ROOT                                                                 */
+/* ---------------------------------------------------------------------- */
+
+const STORAGE_KEY = "miFinanzasData_v1";
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) { /* localStorage no disponible */ }
+  return null;
+}
+
+function exportToExcel({ months, transactions, fixedExpenses, antExpenses, goals, moneda }) {
+  if (typeof XLSX === "undefined") { alert("El módulo de Excel no cargó (revisa tu conexión a internet) e intenta de nuevo."); return; }
+  const wb = XLSX.utils.book_new();
+
+  const movRows = transactions.map(t => ({
+    Fecha: t.fecha, Mes: months.find(m => m.key === t.mes)?.label || t.mes, Tipo: t.tipo,
+    Categoría: t.categoria, Descripción: t.descripcion, "Método de pago": t.metodo, Monto: t.monto,
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(movRows), "Movimientos");
+
+  const fxRows = fixedExpenses.map(f => {
+    const row = { Nombre: f.nombre, Categoría: f.categoria, "Día de pago": f.dia, Monto: f.monto };
+    months.forEach(m => { row[`Pagado ${m.label}`] = f.pagado[m.key] ? "Sí" : "No"; });
+    return row;
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(fxRows), "Gastos Fijos");
+
+  const ahRows = antExpenses.map(a => ({ Fecha: a.fecha, Mes: months.find(m => m.key === a.mes)?.label || a.mes, Descripción: a.descripcion, Categoría: a.categoria, Monto: a.monto }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ahRows), "Gastos Hormiga");
+
+  const mtRows = goals.map(g => ({ Meta: `${g.icono} ${g.nombre}`, Objetivo: g.objetivo, Ahorrado: g.ahorrado, "% Completado": Math.round((g.ahorrado / g.objetivo) * 100) + "%", "Fecha límite": g.fecha || "" }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mtRows), "Metas de Ahorro");
+
+  const rsRows = months.map(m => {
+    const s = monthSummary(transactions, m.key);
+    return { Mes: m.label, Ingresos: Math.round(s.ingresos * 100) / 100, Gastos: Math.round(s.gastosTotales * 100) / 100, Ahorros: Math.round(s.ahorros * 100) / 100, Disponible: Math.round(s.disponible * 100) / 100, "% Ahorro": Math.round(s.pctAhorro * 10) / 10 + "%" };
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rsRows), "Resumen Mensual");
+
+  const today = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `MiFinanzas_Respaldo_${today}.xlsx`);
+}
+
+function App() {
+  const saved = useMemo(loadSaved, []);
+  const [page, setPage] = useState("dashboard");
+  const [months, setMonths] = useState(saved?.months || MONTHS_SEED);
+  const [mesKey, setMesKey] = useState(saved?.mesKey || "2024-05");
+  const [transactions, setTransactions] = useState(saved?.transactions || seedTransactions);
+  const [fixedExpenses, setFixedExpenses] = useState(saved?.fixedExpenses || seedFixedExpenses);
+  const [antExpenses, setAntExpenses] = useState(saved?.antExpenses || seedAntExpenses);
+  const [goals, setGoals] = useState(saved?.goals || seedGoals);
+  const [categorias, setCategorias] = useState(saved?.categorias || CATEGORY_LIST);
+  const [metodos, setMetodos] = useState(saved?.metodos || PAYMENT_METHODS);
+  const [presupuesto, setPresupuesto] = useState(saved?.presupuesto ?? 9600);
+  const [moneda, setMoneda] = useState(saved?.moneda || "Q");
+
+  useEffect(() => {
+    const data = { months, mesKey, transactions, fixedExpenses, antExpenses, goals, categorias, metodos, presupuesto, moneda };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* almacenamiento lleno o no disponible */ }
+  }, [months, mesKey, transactions, fixedExpenses, antExpenses, goals, categorias, metodos, presupuesto, moneda]);
+
+  const resetData = () => {
+    if (!window.confirm("¿Seguro que quieres borrar todos tus datos guardados en este dispositivo y volver a los datos de ejemplo? Esta acción no se puede deshacer.")) return;
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    setMonths(MONTHS_SEED); setMesKey("2024-05");
+    setTransactions(seedTransactions()); setFixedExpenses(seedFixedExpenses());
+    setAntExpenses(seedAntExpenses()); setGoals(seedGoals());
+    setCategorias(CATEGORY_LIST); setMetodos(PAYMENT_METHODS);
+    setPresupuesto(9600); setMoneda("Q");
+  };
+
+  return (
+    <div className="mf-app">
+      <Sidebar page={page} setPage={setPage} />
+      <main className="mf-main">
+        {page === "dashboard" && <Dashboard transactions={transactions} fixedExpenses={fixedExpenses} antExpenses={antExpenses} goals={goals} mesKey={mesKey} setMesKey={setMesKey} moneda={moneda} presupuesto={presupuesto} months={months} setMonths={setMonths} setTransactions={setTransactions} />}
+        {page === "registro" && <Registro transactions={transactions} setTransactions={setTransactions} mesKey={mesKey} setMesKey={setMesKey} categorias={categorias} moneda={moneda} months={months} setMonths={setMonths} />}
+        {page === "fijos" && <GastosFijos fixedExpenses={fixedExpenses} setFixedExpenses={setFixedExpenses} mesKey={mesKey} setMesKey={setMesKey} categorias={categorias} moneda={moneda} months={months} setMonths={setMonths} setTransactions={setTransactions} />}
+        {page === "metas" && <Metas goals={goals} setGoals={setGoals} moneda={moneda} />}
+        {page === "hormiga" && <GastosHormiga antExpenses={antExpenses} setAntExpenses={setAntExpenses} mesKey={mesKey} setMesKey={setMesKey} categorias={categorias} moneda={moneda} months={months} setMonths={setMonths} setTransactions={setTransactions} />}
+        {page === "anual" && <ResumenAnual transactions={transactions} moneda={moneda} months={months} />}
+        {page === "config" && (
+          <Configuracion
+            categorias={categorias} setCategorias={setCategorias} metodos={metodos} setMetodos={setMetodos}
+            presupuesto={presupuesto} setPresupuesto={setPresupuesto} moneda={moneda} setMoneda={setMoneda}
+            onExport={() => exportToExcel({ months, transactions, fixedExpenses, antExpenses, goals, moneda })}
+            onReset={resetData}
+          />
+        )}
+      </main>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+</script>
+</body>
+</html>
